@@ -9,7 +9,9 @@ import pandas as pd
 from pydub import AudioSegment
 import jiwer
 
-# command: python my_benchmark_openai_mac.py --repo_path /Users/michelia/Documents/project4ai/audio/data
+# run
+# pip install -r ../benchmark_openai-whipser_requirements.txt
+# python my_benchmark_openai_mac.py --repo_path /Users/michelia/Documents/project4ai/audio/data
 
 
 def parse_arguments():

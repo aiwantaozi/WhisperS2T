@@ -2,29 +2,31 @@ import argparse
 from whisper.normalizers import EnglishTextNormalizer
 from whisper.normalizers import BasicTextNormalizer
 import jiwer
+import platform
+import time
+import os
+from tqdm import tqdm
+import pandas as pd
+import whisper
+from pydub import AudioSegment
 
 # command: python /Users/michelia/Documents/project4ai/WhisperS2T/scripts/my_benchmark_openai_mac.py --repo_path /Users/michelia/Documents/project4ai/audio/data
-
 
 def parse_arguments():
     parser = argparse.ArgumentParser()
     parser.add_argument('--repo_path', default="", type=str)
     parser.add_argument('--end_line', default=1, type=int)
     parser.add_argument('--compute_type', default="float16", type=str)
+    parser.add_argument('--device', default="cuda", type=str)
 
     args = parser.parse_args()
     return args
 
 
-def run(repo_path, end_line=1, compute_type="float16", lang="en"):
-    import time
-    import os
-    from tqdm import tqdm
-    import pandas as pd
-    import whisper
-    from pydub import AudioSegment
+def run(repo_path, end_line=1, compute_type="float16", device="cuda", lang="en"):
+    system = platform.system()
 
-    results_dir = f"{repo_path}/results/OpenAI"
+    results_dir = f"{repo_path}/results/OpenAI-{system}-{device}-{compute_type}"
     os.makedirs(results_dir, exist_ok=True)
 
     data = pd.read_csv(
@@ -46,7 +48,7 @@ def run(repo_path, end_line=1, compute_type="float16", lang="en"):
         end_line = len(files)
 
     model = whisper.load_model('large-v2')
-    model = model.cpu().eval()
+    model = model.to(device).eval()
 
     audio_duration_list = []
     pred_text_size_list = []
@@ -128,4 +130,4 @@ def calculate_metrics(references, transcriptions):
 if __name__ == '__main__':
     args = parse_arguments()
     run(args.repo_path, end_line=args.end_line,
-        compute_type=args.compute_type, lang="en")   # for mac use fp32
+        compute_type=args.compute_type, device=args.device, lang="en")   # for mac use fp32

@@ -12,7 +12,10 @@ from pydub import AudioSegment
 
 # run
 # cd scripts
-# mac: python my_benchmark_openai_mac.py --repo_path ../data --device cpu --compute_type float32 --end_line 1
+# mac: 
+#   python my_benchmark_openai_mac.py --repo_path ../data --device cpu --compute_type float32 --end_line 1
+# nvidia:
+#   python my_benchmark_openai.py --repo_path ../data --device cuda --compute_type float32 --end_line 1
 
 def parse_arguments():
     parser = argparse.ArgumentParser()

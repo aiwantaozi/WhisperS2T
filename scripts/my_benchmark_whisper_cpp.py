@@ -12,31 +12,36 @@ import jiwer
 
 
 # run
+# conda create -n whisper-benchmark-whispercpp python=3.11
+# conda activate whisper-benchmark-whispercpp
 # cd scripts
-# pip install -r ../benchmark_whipserx_requirements.txt --ignore-installed
-# mac: python my_benchmark_whisperx.py --repo_path ../data --end_line 1 --device cpu --compute_type float32
-
+# pip install -r ../benchmark_requirements_whisper_cpp.txt --ignore-installed
+# mac:
+#   python my_benchmark_whisper_cpp.py --repo_path ../data --end_line 1 --device mps
+# nvidia
+#   需要另外build whisper.cpp
+#   make clean
+#   GGML_CUDA=1 make -j
 
 def parse_arguments():
     parser = argparse.ArgumentParser()
     parser.add_argument('--repo_path', default="", type=str)
     parser.add_argument('--end_line', default=1, type=int)
-    parser.add_argument('--batch_size', default=16, type=int)
-    parser.add_argument('--compute_type', default="float16", type=str)
     parser.add_argument('--device', default="cuda", type=str)
+    parser.add_argument('--threads', default=8, type=int)
 
     args = parser.parse_args()
     return args
 
 
-def run(repo_path, end_line=1, compute_type="float16", batch_size=16, device="cuda", lang="en"):
+def run(repo_path, end_line=1, device="cuda", threads=8, lang="en"):
     system = platform.system()
 
-    results_dir = f"{repo_path}/results/Whisper_CPP-bs_{batch_size}-{system}-{device}-{compute_type}"
+    results_dir = f"{repo_path}/results/WhisperCPP-bs-{system}-{device}-threads{threads}"
     os.makedirs(results_dir, exist_ok=True)
 
     data = pd.read_csv(
-        f'{repo_path}/kincaid46_subset/kincaid46.txt', sep=" ")
+        f'{repo_path}/kincaid46_subset/kincaid46-wav.txt', sep=" ")
     files = [f"{repo_path}/{fn}" for fn in data['audio_path'].tolist()]
     text_files = [f"{repo_path}/{fn}" for fn in data['audio_text'].tolist()]
 
@@ -53,8 +58,9 @@ def run(repo_path, end_line=1, compute_type="float16", batch_size=16, device="cu
     pred_text_list = []
     pred_begin_time = time.time()
     for fn in tqdm(files[:end_line], desc="audio trascribing"):
-        result = run_command(fn)
-        normalize_result = normalizer(result.strip())
+        output = run_command(fn, device, threads)
+
+        normalize_result = normalizer(output.strip())
 
         audio_segment = AudioSegment.from_file(fn)
         duration_sec = len(audio_segment) / 1000.0
@@ -125,14 +131,17 @@ def calculate_metrics(references, transcriptions):
     }
 
 
-def run_command(audio_file_path, device) -> str:
+def run_command(audio_file_path: str, device: str, threads: int) -> str:
     command = [
-        "./main",
+        "/Users/michelia/Documents/project4ai/whisper.cpp/main",
+        "-m",
+        "/Users/michelia/Documents/project4ai/whisper.cpp/models/ggml-large-v2.bin",
         "-f",
         audio_file_path,
         "-debug",
-        "-threads",
-        8,
+        "--threads",
+        str(threads),
+        "--no-timestamps",
     ]
 
     if device == "cpu":
@@ -142,11 +151,11 @@ def run_command(audio_file_path, device) -> str:
         result = subprocess.run(
             command, capture_output=True, text=True, check=True, encoding="utf-8"
         )
-        output = result.stdout
 
         if result.returncode != 0:
             raise Exception(f"Unexpected return code: {result.returncode}")
 
+        output = result.stdout
         if output == "" or output is None:
             raise Exception(
                 f"Output is empty, return code: {result.returncode}")
@@ -161,5 +170,8 @@ def run_command(audio_file_path, device) -> str:
 
 if __name__ == '__main__':
     args = parse_arguments()
-    run(args.repo_path, end_line=args.end_line,
-        compute_type=args.compute_type, lang="en")   # for mac use fp32
+    run(args.repo_path,
+        end_line=args.end_line,
+        device=args.device,
+        threads=args.threads,
+        lang="en")   # for mac use fp32

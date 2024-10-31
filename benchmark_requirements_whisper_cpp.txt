@@ -1,4 +1,3 @@
-nemo_text_processing
 packaging
 ninja
 clean-text
@@ -9,3 +8,6 @@ editdistance
 unidecode
 diff_match_patch
 pandas
+tqdm
+pydub
+openai-whisper

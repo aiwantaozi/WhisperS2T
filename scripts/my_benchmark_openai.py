@@ -10,7 +10,9 @@ import pandas as pd
 import whisper
 from pydub import AudioSegment
 
-# command: python /Users/michelia/Documents/project4ai/WhisperS2T/scripts/my_benchmark_openai_mac.py --repo_path /Users/michelia/Documents/project4ai/audio/data
+# run
+# cd scripts
+# mac: python my_benchmark_openai_mac.py --repo_path ../data --device cpu --compute_type float32 --end_line 1
 
 def parse_arguments():
     parser = argparse.ArgumentParser()

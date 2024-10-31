@@ -11,9 +11,15 @@ from pydub import AudioSegment
 import jiwer
 
 # run
+# conda create -n whisper-benchmark-whisperx python=3.11
+# conda activate whisper-benchmark-whisperx
 # cd scripts
 # pip install -r ../benchmark_whipserx_requirements.txt --ignore-installed
 # mac: python my_benchmark_whisperx.py --repo_path ../data --end_line 1 --device cpu --compute_type float32
+# nvidia:
+#   install cudadnn https://developer.nvidia.com/cudnn-downloads?target_os=Linux&target_arch=x86_64&Distribution=Ubuntu&target_version=22.04&target_type=deb_network
+#   pip install torch==2.5.0 torchvision==0.20.0 torchaudio==2.5.0 --index-url https://download.pytorch.org/whl/cu124 
+#   python my_benchmark_whisperx.py --repo_path ../data --end_line 1 --device cuda --compute_type float32
 
 
 def parse_arguments():
@@ -24,7 +30,6 @@ def parse_arguments():
     parser.add_argument('--compute_type', default="float16", type=str)
     parser.add_argument('--device', default="cuda", type=str)
     parser.add_argument('--threads', default=8, type=int)
-
 
     args = parser.parse_args()
     return args

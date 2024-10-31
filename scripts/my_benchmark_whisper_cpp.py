@@ -20,8 +20,12 @@ import jiwer
 #   python my_benchmark_whisper_cpp.py --repo_path ../data --end_line 1 --device mps --binary_path /Users/michelia/Documents/project4ai/whisper.cpp/main --model_path /Users/michelia/Documents/project4ai/whisper.cpp/models/ggml-large-v2.bin
 # nvidia
 #   需要另外build whisper.cpp
+#   cd whisper.cpp
+#   sh ./models/download-ggml-model.sh large-v2
 #   make clean
 #   GGML_CUDA=1 make -j
+#   ./main -m ./models/ggml-large-v2.bin -f samples/jfk.wav -otxt jfk.txt
+#   python my_benchmark_whisper_cpp.py --repo_path ../data --end_line 1 --device cuda --binary_path /home/michelia/code/whisper.cpp/main --model_path /home/michelia/code/whisper.cpp/models/ggml-large-v2.bin
 
 def parse_arguments():
     parser = argparse.ArgumentParser()
@@ -173,6 +177,8 @@ def run_command(binary_path: str, model_path: str, audio_file_path: str, device:
 if __name__ == '__main__':
     args = parse_arguments()
     run(args.repo_path,
+        binary_path=args.binary_path,
+        model_path=args.model_path,
         end_line=args.end_line,
         device=args.device,
         threads=args.threads,

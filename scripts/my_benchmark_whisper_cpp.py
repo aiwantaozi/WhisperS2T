@@ -17,7 +17,7 @@ import jiwer
 # cd scripts
 # pip install -r ../benchmark_requirements_whisper_cpp.txt --ignore-installed
 # mac:
-#   python my_benchmark_whisper_cpp.py --repo_path ../data --end_line 1 --device mps
+#   python my_benchmark_whisper_cpp.py --repo_path ../data --end_line 1 --device mps --binary_path /Users/michelia/Documents/project4ai/whisper.cpp/main --model_path /Users/michelia/Documents/project4ai/whisper.cpp/models/ggml-large-v2.bin
 # nvidia
 #   需要另外build whisper.cpp
 #   make clean
@@ -25,6 +25,8 @@ import jiwer
 
 def parse_arguments():
     parser = argparse.ArgumentParser()
+    parser.add_argument('--binary_path', default="", type=str)
+    parser.add_argument('--model_path', default="", type=str)
     parser.add_argument('--repo_path', default="", type=str)
     parser.add_argument('--end_line', default=1, type=int)
     parser.add_argument('--device', default="cuda", type=str)
@@ -34,7 +36,7 @@ def parse_arguments():
     return args
 
 
-def run(repo_path, end_line=1, device="cuda", threads=8, lang="en"):
+def run(repo_path, end_line=1, device="cuda", threads=8, binary_path="", model_path="", lang="en"):
     system = platform.system()
 
     results_dir = f"{repo_path}/results/WhisperCPP-bs-{system}-{device}-threads{threads}"
@@ -58,7 +60,7 @@ def run(repo_path, end_line=1, device="cuda", threads=8, lang="en"):
     pred_text_list = []
     pred_begin_time = time.time()
     for fn in tqdm(files[:end_line], desc="audio trascribing"):
-        output = run_command(fn, device, threads)
+        output = run_command(binary_path, model_path, fn, device, threads)
 
         normalize_result = normalizer(output.strip())
 
@@ -131,11 +133,11 @@ def calculate_metrics(references, transcriptions):
     }
 
 
-def run_command(audio_file_path: str, device: str, threads: int) -> str:
+def run_command(binary_path: str, model_path: str, audio_file_path: str, device: str, threads: int) -> str:
     command = [
-        "/Users/michelia/Documents/project4ai/whisper.cpp/main",
+        binary_path,
         "-m",
-        "/Users/michelia/Documents/project4ai/whisper.cpp/models/ggml-large-v2.bin",
+        model_path,
         "-f",
         audio_file_path,
         "-debug",

@@ -1,14 +1,15 @@
 import argparse
 import platform
+import subprocess
 from whisper.normalizers import EnglishTextNormalizer
 from whisper.normalizers import BasicTextNormalizer
 import time
 import os
-import whisperx
 from tqdm import tqdm
 import pandas as pd
 from pydub import AudioSegment
 import jiwer
+
 
 # run
 # cd scripts
@@ -23,21 +24,16 @@ def parse_arguments():
     parser.add_argument('--batch_size', default=16, type=int)
     parser.add_argument('--compute_type', default="float16", type=str)
     parser.add_argument('--device', default="cuda", type=str)
-    parser.add_argument('--threads', default=8, type=int)
-
 
     args = parser.parse_args()
     return args
 
 
-def run(repo_path, end_line=1, compute_type="float16", batch_size=16, threads=8, device="cuda", lang="en"):
+def run(repo_path, end_line=1, compute_type="float16", batch_size=16, device="cuda", lang="en"):
     system = platform.system()
 
-    results_dir = f"{repo_path}/results/WhisperX-bs_{batch_size}-{system}-{device}-{compute_type}-threads{threads}"
+    results_dir = f"{repo_path}/results/Whisper_CPP-bs_{batch_size}-{system}-{device}-{compute_type}"
     os.makedirs(results_dir, exist_ok=True)
-
-    model = whisperx.load_model(
-        "large-v2", device, threads=threads, compute_type=compute_type, language=lang, asr_options={'beam_size': 1})
 
     data = pd.read_csv(
         f'{repo_path}/kincaid46_subset/kincaid46.txt', sep=" ")
@@ -57,13 +53,8 @@ def run(repo_path, end_line=1, compute_type="float16", batch_size=16, threads=8,
     pred_text_list = []
     pred_begin_time = time.time()
     for fn in tqdm(files[:end_line], desc="audio trascribing"):
-        audio = whisperx.load_audio(fn)
-        result = model.transcribe(
-            audio,
-            batch_size=batch_size,
-            print_progress=True)
-        normalize_result = normalizer(" ".join([_['text'].strip()
-                                                for _ in result['segments']]))
+        result = run_command(fn)
+        normalize_result = normalizer(result.strip())
 
         audio_segment = AudioSegment.from_file(fn)
         duration_sec = len(audio_segment) / 1000.0
@@ -121,6 +112,11 @@ def run(repo_path, end_line=1, compute_type="float16", batch_size=16, threads=8,
     infer_time = pd.DataFrame(infer_time[1:], columns=infer_time[0])
     infer_time.to_csv(f"{results_dir}/infer_time.tsv", sep="\t", index=False)
 
+# ref: https://colab.research.google.com/drive/1B8BtVepMyvlFuQQyv87AWKn_UNkav6xu?usp=sharing#scrollTo=PcTuPy-fvxJp
+# ref: https://github.com/g8a9/multilingual-asr-gender-gap/blob/800a1824adf66c95cbd367795976c6926dc419fa/src/2_sample_and_compute_metrics_binary.py#L28
+# https://whisperapi.com/word-error-rate-wer
+# https://www.educative.io/answers/how-to-compute-word-error-rate-wer-with-openai-whisper
+
 
 def calculate_metrics(references, transcriptions):
     return {
@@ -129,14 +125,41 @@ def calculate_metrics(references, transcriptions):
     }
 
 
+def run_command(audio_file_path, device) -> str:
+    command = [
+        "./main",
+        "-f",
+        audio_file_path,
+        "-debug",
+        "-threads",
+        8,
+    ]
+
+    if device == "cpu":
+        command.append("-ng")
+
+    try:
+        result = subprocess.run(
+            command, capture_output=True, text=True, check=True, encoding="utf-8"
+        )
+        output = result.stdout
+
+        if result.returncode != 0:
+            raise Exception(f"Unexpected return code: {result.returncode}")
+
+        if output == "" or output is None:
+            raise Exception(
+                f"Output is empty, return code: {result.returncode}")
+
+        return output
+    except Exception as e:
+        raise Exception(
+            f"Failed to execute {command}: {e},"
+            f" stdout: {result.stdout}, stderr: {result.stderr}"
+        )
+
+
 if __name__ == '__main__':
     args = parse_arguments()
-    run(
-        args.repo_path,
-        batch_size=args.batch_size,
-        end_line=args.end_line,
-        compute_type=args.compute_type,
-        device=args.device,
-        threads=args.threads,
-        lang="en")
-    # for mac set device to cpu
+    run(args.repo_path, end_line=args.end_line,
+        compute_type=args.compute_type, lang="en")   # for mac use fp32

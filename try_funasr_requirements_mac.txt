@@ -1,0 +1,6 @@
+torchaudio
+torch
+funasr
+modelscope 
+huggingface 
+huggingface_hub

@@ -26,6 +26,14 @@ import jiwer
 #   GGML_CUDA=1 make -j
 #   ./main -m ./models/ggml-large-v2.bin -f samples/jfk.wav -otxt jfk.txt
 #   python my_benchmark_whisper_cpp.py --repo_path ../data --end_line 1 --device cuda --binary_path /home/michelia/code/whisper.cpp/main --model_path /home/michelia/code/whisper.cpp/models/ggml-large-v2.bin
+# npu
+#   需要另外build whisper.cpp
+#   mkdir build
+#   cd build
+#   cmake .. -D GGML_CANN=on
+#   make -j
+#   ./main -m ./models/ggml-large-v2.bin -f samples/jfk.wav -otxt jfk.txt
+#   python my_benchmark_whisper_cpp.py --repo_path ../data --end_line 1 --device cuda --binary_path /home/michelia/code/whisper.cpp/main --model_path /home/michelia/code/whisper.cpp/models/ggml-large-v2.bin
 
 def parse_arguments():
     parser = argparse.ArgumentParser()

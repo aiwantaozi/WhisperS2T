@@ -1,0 +1,13 @@
+packaging
+ninja
+clean-text
+contractions
+jiwer
+nltk
+editdistance
+unidecode
+diff_match_patch
+pandas
+tqdm
+pydub
+faster-whisper

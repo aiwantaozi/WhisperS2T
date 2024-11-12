@@ -14,13 +14,11 @@ import jiwer
 # conda create -n whisper-benchmark-faster-whisper python=3.11
 # conda activate whisper-benchmark-faster-whisper
 # cd scripts
-# conda install -c conda-forge pynini=2.1.5
 # pip install -r ../benchmark_faster_whipser_requirements_mac.txt --ignore-installed
 # mac:
 #   python my_benchmark_faster_whisper.py --repo_path ../data --end_line 1 --device cpu --compute_type float32
 # nvidia:
 #   install cudadnn https://developer.nvidia.com/cudnn-downloads?target_os=Linux&target_arch=x86_64&Distribution=Ubuntu&target_version=22.04&target_type=deb_network
-#   pip install torch==2.5.0 torchvision==0.20.0 torchaudio==2.5.0 --index-url https://download.pytorch.org/whl/cu124
 #   python my_benchmark_faster_whisper.py --repo_path ../data --end_line 1 --device cuda --compute_type float32
 
 

@@ -10,4 +10,5 @@ diff_match_patch
 pandas
 tqdm
 pydub
-faster-whisper
+faster-whisper @ https://github.com/SYSTRAN/faster-whisper/archive/refs/heads/master.tar.gz
+openai-whisper
